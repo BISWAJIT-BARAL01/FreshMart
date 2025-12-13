@@ -5,6 +5,7 @@ import { mongoService } from '../services/mongoService';
 import { ChatMessage } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
 const Chatbot: React.FC = () => {
   const { user } = useAuth();
@@ -13,8 +14,29 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice Hook integration
+  const { 
+    isListening, 
+    transcript, 
+    interimTranscript, 
+    startListening, 
+    stopListening 
+  } = useSpeechRecognition({
+    silenceDuration: 3000, // Wait 3 seconds in chat mode for longer queries
+    onEnd: () => {
+       // When silence is detected, we don't auto-send, we just update the input field
+       // This allows the user to review before sending.
+    }
+  });
+
+  // Sync voice transcript with input field
+  useEffect(() => {
+    if (transcript || interimTranscript) {
+        setInput(transcript + (interimTranscript ? ' ' + interimTranscript : ''));
+    }
+  }, [transcript, interimTranscript]);
 
   useEffect(() => {
       if (isOpen && user) {
@@ -37,6 +59,9 @@ const Chatbot: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
+
+    // Stop listening if we hit send
+    if (isListening) stopListening();
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
@@ -63,32 +88,6 @@ const Chatbot: React.FC = () => {
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert("Voice not supported in this browser.");
-      return;
-    }
-    
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setIsListening(true);
-    
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      setIsListening(false);
-    };
-
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognition.start();
   };
 
   if (!user) return null;
@@ -149,17 +148,22 @@ const Chatbot: React.FC = () => {
 
           <div className="p-3 border-t border-gray-200 bg-white flex gap-2">
             <button 
-              onClick={startListening}
-              className={`p-3 rounded-full ${isListening ? 'bg-red-100 text-maroon animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors`}
+              onClick={isListening ? stopListening : startListening}
+              className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-50 text-maroon animate-pulse border border-red-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              title={isListening ? "Stop Listening" : "Start Voice Input"}
             >
               {isListening ? <MicOff size={20} /> : <Mic size={20} />}
             </button>
             <input 
               type="text" 
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { 
+                  setInput(e.target.value);
+                  // If user types manually, assume they want to stop voice
+                  if (isListening) stopListening();
+              }}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask anything..."
+              placeholder={isListening ? "Listening..." : "Ask anything..."}
               className="flex-1 bg-transparent border-none outline-none text-black placeholder-gray-400"
             />
             <button 

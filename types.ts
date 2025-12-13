@@ -1,3 +1,4 @@
+
 export type Language = 'en' | 'hi' | 'mr' | 'bn' | 'ta' | 'te' | 'gu' | 'kn' | 'ml' | 'pa' | 'or';
 
 export type Theme = 'light' | 'dark';
@@ -54,4 +55,10 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: Date;
+}
+
+declare global {
+  interface Window {
+    google: any;
+  }
 }

@@ -1,14 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { User, MapPin, Phone, Award, Edit3, Save, Camera, LogOut, Globe, Moon, Sun, Zap } from 'lucide-react';
+import { User, MapPin, Phone, Award, Edit3, Save, Camera, LogOut, Globe, Zap } from 'lucide-react';
 import NeonCard from './ui/NeonCard';
-import { getTranslation, SUPPORTED_LANGUAGES, toLocalDigits } from '../constants';
+import SafeImage from './ui/SafeImage';
+import { getTranslation, SUPPORTED_LANGUAGES, toLocalDigits, API_BASE_URL } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Profile: React.FC = () => {
     const { userProfile, updateProfileData, logout } = useAuth();
-    const { theme, toggleTheme, reduceMotion, toggleReduceMotion } = useTheme();
+    const { reduceMotion, toggleReduceMotion } = useTheme();
     const { language, setLanguage } = useLanguage();
     
     const [isEditing, setIsEditing] = useState(false);
@@ -27,71 +28,50 @@ const Profile: React.FC = () => {
         await updateProfileData(formData);
     };
 
-    const compressImage = (img: HTMLImageElement, quality: number, maxWidth: number): string => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-            if (width > maxWidth) {
-                height *= maxWidth / width;
-                width = maxWidth;
-            }
-        } else {
-            if (height > maxWidth) {
-                width *= maxWidth / height;
-                height = maxWidth;
-            }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        return canvas.toDataURL('image/jpeg', quality);
-    };
-
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file || !userProfile) return;
 
+        // Validating Image
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload a valid image file');
+            return;
+        }
+
         setLoadingImage(true);
         
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        
-        reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target?.result as string;
-            
-            img.onload = async () => {
-                try {
-                    // Client-Side Compression Logic
-                    // Target: < 300KB
-                    const MAX_SIZE_BYTES = 300 * 1024;
-                    const MAX_DIMENSION = 800;
-                    
-                    let quality = 0.9;
-                    let dataUrl = compressImage(img, quality, MAX_DIMENSION);
-                    
-                    // Reduce quality until size is under limit
-                    while (dataUrl.length * 0.75 > MAX_SIZE_BYTES && quality > 0.1) {
-                        quality -= 0.1;
-                        dataUrl = compressImage(img, quality, MAX_DIMENSION);
-                    }
+        try {
+            // Prepare FormData for PHP Backend
+            const uploadData = new FormData();
+            uploadData.append('profile_image', file);
+            uploadData.append('uid', userProfile.uid);
 
-                    // Update Profile Data with Base64 String (Simulation for PHP API)
-                    await updateProfileData({ photoURL: dataUrl });
-                    
-                    alert("Profile picture updated successfully!");
-                } catch (err) {
-                    console.error("Upload failed", err);
-                    alert("Failed to upload image. Please try again.");
-                } finally {
-                    setLoadingImage(false);
-                }
+            // ACTUAL API CALL (Uncomment when PHP backend is ready)
+            /*
+            const response = await fetch(`${API_BASE_URL}/upload_profile.php`, {
+                method: 'POST',
+                body: uploadData, // Fetch automatically sets multipart/form-data headers
+            });
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message);
+            const imageUrl = result.data.url;
+            */
+            
+            // SIMULATED RESPONSE for Demo
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async (e) => {
+                 const imageUrl = e.target?.result as string;
+                 await updateProfileData({ photoURL: imageUrl });
+                 setLoadingImage(false);
             };
-        };
+
+        } catch (err) {
+            console.error("Upload failed", err);
+            alert("Failed to upload image. Server might be offline.");
+            setLoadingImage(false);
+        }
     };
 
     if (!userProfile) return <div className="text-black text-center p-10">Loading Profile...</div>;
@@ -107,13 +87,23 @@ const Profile: React.FC = () => {
                  <div className="absolute -bottom-12 left-6 md:left-10 flex flex-col md:flex-row items-end gap-6">
                     {/* Profile DP */}
                     <div className="relative group">
-                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white overflow-hidden bg-white shadow-lg">
-                            <img src={userProfile.photoURL} className={`w-full h-full object-cover transition-opacity ${loadingImage ? 'opacity-50' : 'opacity-100'}`} alt="Profile" />
-                            {loadingImage && <div className="absolute inset-0 flex items-center justify-center text-black"><span className="animate-spin">⌛</span></div>}
+                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white overflow-hidden bg-white shadow-lg relative">
+                            <SafeImage 
+                                src={userProfile.photoURL} 
+                                className={`w-full h-full object-cover transition-opacity ${loadingImage ? 'opacity-50' : 'opacity-100'}`} 
+                                alt="Profile" 
+                                fallbackIcon={<User size={40} className="text-gray-300"/>}
+                            />
+                            {loadingImage && (
+                                <div className="absolute inset-0 flex items-center justify-center text-black bg-white/50">
+                                    <div className="w-8 h-8 border-4 border-neonViolet border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            )}
                         </div>
                         <button 
                             onClick={() => fileInputRef.current?.click()}
-                            className="absolute bottom-2 right-2 p-2 bg-maroon rounded-full text-white shadow-lg hover:scale-110 transition-transform"
+                            disabled={loadingImage}
+                            className="absolute bottom-2 right-2 p-2 bg-maroon rounded-full text-white shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
                         >
                             <Camera size={20} />
                         </button>

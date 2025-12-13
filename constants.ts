@@ -1,4 +1,8 @@
+
 import { ProduceItem, Language } from './types';
+
+// Pointing to relative path for PHP API
+export const API_BASE_URL = '/api';
 
 export const SUPPORTED_LANGUAGES: { code: Language; label: string; nativeName: string }[] = [
   { code: 'en', label: 'English', nativeName: 'English' },
