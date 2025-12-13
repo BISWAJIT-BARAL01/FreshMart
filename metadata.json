@@ -1,0 +1,8 @@
+{
+  "name": "FreshMart",
+  "description": "A futuristic, neon-styled dashboard for Indian farmers to manage produce, inventory, and sales with voice-first interaction and AI assistance.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
