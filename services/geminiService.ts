@@ -1,7 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.API_KEY || 'dummy-key'; // In real app, from env
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getGeminiResponse = async (
   prompt: string, 
@@ -10,12 +9,12 @@ export const getGeminiResponse = async (
 ): Promise<string> => {
   try {
     const model = 'gemini-2.5-flash';
-    const systemInstruction = `You are a helpful AI assistant for an Indian farmer using the 'Kisan Smart Mart' app. 
+    const systemInstruction = `You are a helpful AI assistant for 'FreshMart', an app for Indian farmers. 
     The user speaks ${language}. 
-    Keep answers short, simple, and encouraging. 
+    Keep answers EXTREMELY short (max 2 sentences), simple, and encouraging. 
+    Avoid technical jargon.
     Context: ${context}.
-    If asked about prices, give approximate market rates in INR.
-    If asked about farming tips, give brief advice suitable for Indian climate.
+    If asked about prices, give approximate market rates in INR based on general Indian mandi trends.
     `;
 
     const response = await ai.models.generateContent({
@@ -24,25 +23,25 @@ export const getGeminiResponse = async (
       config: {
         systemInstruction,
         temperature: 0.7,
-        maxOutputTokens: 150,
+        maxOutputTokens: 100,
       }
     });
 
-    return response.text || "Sorry, I couldn't understand that. Please try again.";
+    return response.text || "Sorry, try again.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Network error. Please check your connection.";
+    return "Network issue. Please check internet.";
   }
 };
 
 export const parseVoiceSaleIntent = async (transcript: string): Promise<any> => {
    try {
     const model = 'gemini-2.5-flash';
-    const systemInstruction = `Extract sales data from the farmer's voice input. 
+    const systemInstruction = `Extract sales data from the farmer's voice input which may be in Hindi, English, or mixed (Hinglish).
     Return strictly JSON. 
-    Format: { "item": string, "quantity": number, "unit": string, "price": number }.
-    If missing info, try to guess or return null for that field.
-    Translate item names to English if they are in Hindi/local language.
+    Format: { "item": string, "quantity": number, "unit": string, "price": number, "confidence": "high" | "low" }.
+    Translate item names to English standardized names (e.g., 'Kanda' -> 'Onion').
+    If specific fields are missing, set them to null.
     `;
 
     const response = await ai.models.generateContent({

@@ -40,23 +40,27 @@ const GeometricVeg = ({ position, color }: { position: [number, number, number],
      return (
         <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.8}>
              <Cylinder ref={meshRef} args={[0.3, 0.3, 2, 16]} position={position} rotation={[0,0,Math.PI/4]}>
+                {/* @ts-ignore */}
                 <meshStandardMaterial color={color} roughness={0.3} metalness={0.5} emissive={color} emissiveIntensity={0.5} />
              </Cylinder>
         </Float>
-     )
+     );
 }
 
 const SceneContent = () => {
   return (
     <>
+      {/* @ts-ignore */}
       <ambientLight intensity={0.5} />
+      {/* @ts-ignore */}
       <pointLight position={[10, 10, 10]} intensity={2} color="#9A4DFF" />
+      {/* @ts-ignore */}
       <pointLight position={[-10, -10, -10]} intensity={1} color="#00A3FF" />
       
       {/* Abstract Representation of Produce */}
-      <GlowingOrb position={[-2, 0, 0]} color="#FFA500" /> {/* Orange */}
-      <GlowingOrb position={[2, 1, -1]} color="#FF4545" distort={0.2} /> {/* Tomato/Apple */}
-      <GeometricVeg position={[0, -1, 1]} color="#45FFC6" /> {/* Cucumber/Gourd */}
+      <GlowingOrb position={[-2, 0, 0] as [number, number, number]} color="#FFA500" /> {/* Orange */}
+      <GlowingOrb position={[2, 1, -1] as [number, number, number]} color="#FF4545" distort={0.2} /> {/* Tomato/Apple */}
+      <GeometricVeg position={[0, -1, 1] as [number, number, number]} color="#45FFC6" /> {/* Cucumber/Gourd */}
       
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
     </>

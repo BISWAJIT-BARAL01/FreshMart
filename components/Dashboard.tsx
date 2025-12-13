@@ -1,20 +1,30 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, AlertCircle, DollarSign, Package } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, DollarSign, Package, ArrowUpRight, ArrowRight, ArrowUp } from 'lucide-react';
 import NeonCard from './ui/NeonCard';
-import { MOCK_SALES, MOCK_PRODUCE } from '../constants';
+import { MOCK_SALES, MOCK_PRODUCE, TRANSLATIONS } from '../constants';
+import { Language } from '../types';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  lang: Language;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
+  const t = TRANSLATIONS[lang as keyof typeof TRANSLATIONS] || TRANSLATIONS['en'];
+
+  // Simplified Market Trend Logic for UI
+  const marketTrend = 'good'; // 'good' | 'wait' | 'stable'
+
   return (
     <div className="p-4 md:p-8 space-y-8 animate-fade-in">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <NeonCard accentColor="purple" className="flex items-center justify-between">
           <div>
-            <p className="text-white/60 text-sm font-display">Today's Earnings</p>
+            <p className="text-white/60 text-sm font-display">{t.todayEarnings}</p>
             <h3 className="text-2xl font-mono text-white font-bold mt-1">₹4,250</h3>
-            <span className="text-mintCyan text-xs flex items-center mt-2">
-              <TrendingUp size={12} className="mr-1" /> +12% from yesterday
+            <span className="text-safeGreen text-xs flex items-center mt-2">
+              <ArrowUpRight size={14} className="mr-1" /> +12%
             </span>
           </div>
           <div className="w-12 h-12 rounded-full bg-neonViolet/20 flex items-center justify-center text-neonViolet">
@@ -24,10 +34,10 @@ const Dashboard: React.FC = () => {
 
         <NeonCard accentColor="blue" className="flex items-center justify-between">
           <div>
-            <p className="text-white/60 text-sm font-display">Total Sales (Kg)</p>
+            <p className="text-white/60 text-sm font-display">{t.totalSales}</p>
             <h3 className="text-2xl font-mono text-white font-bold mt-1">145 kg</h3>
             <span className="text-electricBlue text-xs flex items-center mt-2">
-              <Package size={12} className="mr-1" /> 24 Transactions
+              <Package size={14} className="mr-1" /> 24 Orders
             </span>
           </div>
           <div className="w-12 h-12 rounded-full bg-electricBlue/20 flex items-center justify-center text-electricBlue">
@@ -37,27 +47,30 @@ const Dashboard: React.FC = () => {
 
         <NeonCard accentColor="red" className="flex items-center justify-between">
           <div>
-            <p className="text-white/60 text-sm font-display">Low Stock Alerts</p>
+            <p className="text-white/60 text-sm font-display">{t.lowStock}</p>
             <h3 className="text-2xl font-mono text-white font-bold mt-1">2 Items</h3>
-            <span className="text-red-400 text-xs flex items-center mt-2">
-              Restock needed soon
+            <span className="text-alertRed text-xs flex items-center mt-2">
+              <AlertCircle size={14} className="mr-1" /> Restock Now
             </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+          <div className="w-12 h-12 rounded-full bg-alertRed/20 flex items-center justify-center text-alertRed">
             <AlertCircle size={24} />
           </div>
         </NeonCard>
 
-        <NeonCard accentColor="green" className="flex items-center justify-between">
+        {/* Improved Market Trend Card */}
+        <NeonCard accentColor="green" className="flex flex-col justify-between relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-20 h-20 bg-safeGreen/10 rounded-bl-full -mr-4 -mt-4"></div>
            <div>
-            <p className="text-white/60 text-sm font-display">Market Trend</p>
-            <h3 className="text-2xl font-mono text-white font-bold mt-1">Bullish</h3>
-            <span className="text-mintCyan text-xs flex items-center mt-2">
-              Onion prices up 15%
+            <p className="text-white/60 text-sm font-display">{t.marketTrend}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <h3 className="text-xl font-display text-white font-bold">
+                {t.goodToSell}
+              </h3>
+            </div>
+            <span className="text-safeGreen text-xs flex items-center mt-2 font-bold bg-safeGreen/10 px-2 py-1 rounded-full w-fit">
+              <ArrowUp size={12} className="mr-1" /> High Demand
             </span>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-mintCyan/20 flex items-center justify-center text-mintCyan">
-            <TrendingUp size={24} />
           </div>
         </NeonCard>
       </div>
@@ -66,10 +79,10 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <NeonCard className="lg:col-span-2 h-[400px] flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-display text-white">Weekly Revenue</h3>
+            <h3 className="text-xl font-display text-white">Revenue (₹)</h3>
             <select className="bg-white/10 border border-white/20 text-white text-sm rounded-lg p-2 outline-none">
-              <option>Last 7 Days</option>
-              <option>Last Month</option>
+              <option>7 Days</option>
+              <option>30 Days</option>
             </select>
           </div>
           <div className="flex-1 w-full h-full min-h-0">
@@ -83,7 +96,7 @@ const Dashboard: React.FC = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                 <XAxis dataKey="day" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
+                <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#1A0B2E', border: '1px solid #9A4DFF', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff' }}
@@ -97,8 +110,8 @@ const Dashboard: React.FC = () => {
         {/* Live Inventory Snapshot */}
         <NeonCard className="h-[400px] overflow-hidden flex flex-col">
            <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-display text-white">Stock Snapshot</h3>
-            <span className="text-xs text-electricBlue cursor-pointer hover:underline">View All</span>
+            <h3 className="text-xl font-display text-white">{t.inventory}</h3>
+            <span className="text-xs text-electricBlue cursor-pointer hover:underline">See All</span>
           </div>
           <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
             {MOCK_PRODUCE.map((item) => (
@@ -106,22 +119,18 @@ const Dashboard: React.FC = () => {
                     <img src={item.image} alt={item.name_en} className="w-12 h-12 rounded-lg object-cover mr-4" />
                     <div className="flex-1">
                         <h4 className="text-white font-medium">{item.name_en}</h4>
-                        <p className="text-white/50 text-xs">{item.stock} {item.unit} left</p>
+                        <p className="text-white/50 text-xs">{item.stock} {item.unit}</p>
                     </div>
                     <div className="text-right">
                         <p className="text-mintCyan font-mono">₹{item.price}</p>
-                        <p className={`text-[10px] ${item.stock < 50 ? 'text-red-400' : 'text-green-400'}`}>
-                            {item.stock < 50 ? 'Low Stock' : 'In Stock'}
+                        <p className={`text-[10px] font-bold ${item.stock < 50 ? 'text-alertRed' : 'text-safeGreen'}`}>
+                            {item.stock < 50 ? 'Low' : 'OK'}
                         </p>
                     </div>
                 </div>
             ))}
           </div>
         </NeonCard>
-      </div>
-
-      <div className="text-center text-white/30 text-xs mt-8 pb-4">
-        Data powered by MongoDB (Historical) & Firebase (Realtime)
       </div>
     </div>
   );

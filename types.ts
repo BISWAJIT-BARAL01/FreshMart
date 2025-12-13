@@ -26,6 +26,15 @@ export interface UserProfile {
   language: Language;
   location: string;
   avatar: string;
+  points: number;
+  badges: string[];
+}
+
+export interface AppSettings {
+  language: Language;
+  theme: 'dark' | 'light';
+  reduceMotion: boolean;
+  notifications: boolean;
 }
 
 export enum AnalyticsSource {
