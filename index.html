@@ -12,15 +12,22 @@
         theme: {
           extend: {
             colors: {
-              deepPurple: '#1A0B2E',
-              midnightBlack: '#00010F',
-              electricBlue: '#00A3FF',
-              neonViolet: '#9A4DFF',
-              softWhite: '#F5F7FA',
-              mintCyan: '#45FFC6',
-              alertRed: '#FF4545',
-              safeGreen: '#00FF94',
-              warnYellow: '#FFD600'
+              // Redefined Palette for Green/White/Maroon Theme
+              deepPurple: '#F1F8E9', // Light Green Surface (was dark)
+              midnightBlack: '#FFFFFF', // Main Background (was black)
+              electricBlue: '#800000', // Maroon (Secondary)
+              neonViolet: '#2E7D32', // Forest Green (Primary)
+              softWhite: '#1A1A1A', // Text Black
+              mintCyan: '#1B5E20', // Dark Green
+              alertRed: '#800000', // Maroon for alerts
+              safeGreen: '#2E7D32', // Green
+              warnYellow: '#F9A825',
+              
+              // Helper colors
+              surface: '#FFFFFF',
+              surfaceAlt: '#F1F8E9',
+              maroon: '#800000',
+              forestGreen: '#2E7D32'
             },
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
@@ -43,8 +50,8 @@
     </script>
     <style>
       body {
-        background-color: #00010F;
-        color: #F5F7FA;
+        background-color: #FFFFFF;
+        color: #000000;
         overflow-x: hidden;
       }
       /* Custom Scrollbar */
@@ -52,27 +59,27 @@
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #1A0B2E;
+        background: #F1F8E9;
       }
       ::-webkit-scrollbar-thumb {
-        background: #9A4DFF;
+        background: #2E7D32;
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #00A3FF;
+        background: #800000;
       }
       .glass-panel {
-        background: rgba(26, 11, 46, 0.6);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(154, 77, 255, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        border: 1px solid rgba(46, 125, 50, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
       .neon-text {
-        text-shadow: 0 0 10px rgba(154, 77, 255, 0.5);
+        text-shadow: 0 0 1px rgba(46, 125, 50, 0.1);
       }
       .loader {
-        border-top-color: #9A4DFF;
+        border-top-color: #2E7D32;
         -webkit-animation: spinner 1.5s linear infinite;
         animation: spinner 1.5s linear infinite;
       }
@@ -82,20 +89,25 @@
       }
     </style>
     <script type="importmap">
-    {
-      "imports": {
-        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-        "@react-three/fiber": "https://esm.sh/@react-three/fiber@^9.4.2",
-        "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-        "react/": "https://esm.sh/react@^19.2.3/",
-        "react": "https://esm.sh/react@^19.2.3",
-        "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-        "@react-three/drei": "https://esm.sh/@react-three/drei@^10.7.7",
-        "recharts": "https://esm.sh/recharts@^3.5.1",
-        "three": "https://esm.sh/three@^0.182.0"
-      }
-    }
-    </script>
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@react-three/fiber": "https://esm.sh/@react-three/fiber@^9.4.2",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "@react-three/drei": "https://esm.sh/@react-three/drei@^10.7.7",
+    "recharts": "https://esm.sh/recharts@^3.5.1",
+    "three": "https://esm.sh/three@^0.182.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+    "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js",
+    "firebase/": "https://esm.sh/firebase@^12.6.0/"
+  }
+}
+</script>
   </head>
   <body>
     <div id="root"></div>

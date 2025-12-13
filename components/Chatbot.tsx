@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Mic, MicOff } from 'lucide-react';
 import { getGeminiResponse } from '../services/geminiService';
+import { mongoService } from '../services/mongoService';
 import { ChatMessage } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Chatbot: React.FC = () => {
+  const { user } = useAuth();
+  const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -11,13 +16,24 @@ const Chatbot: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+      if (isOpen && user) {
+          mongoService.getChatHistory(user.uid).then(history => {
+              if (history && history.length > 0) setMessages(history);
+          });
+      }
+  }, [isOpen, user]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen]);
+    if (messages.length > 0 && user) {
+        mongoService.saveChatHistory(user.uid, messages);
+    }
+  }, [messages, user]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -34,7 +50,7 @@ const Chatbot: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const responseText = await getGeminiResponse(input, "User is asking about market prices or inventory.");
+      const responseText = await getGeminiResponse(input, "User is asking about market prices or inventory.", language);
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
@@ -55,16 +71,14 @@ const Chatbot: React.FC = () => {
       return;
     }
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN'; // Could default to hi-IN based on preference
+    recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
     recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onstart = () => setIsListening(true);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
@@ -77,45 +91,43 @@ const Chatbot: React.FC = () => {
     recognition.start();
   };
 
+  if (!user) return null;
+
   return (
     <>
-      {/* Floating Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 rounded-full bg-neonViolet text-white shadow-[0_0_20px_rgba(154,77,255,0.6)] hover:scale-110 transition-all z-50 ${isOpen ? 'hidden' : 'block'}`}
+        className={`fixed bottom-6 right-6 p-4 rounded-full bg-neonViolet text-white shadow-lg hover:bg-green-700 transition-all z-50 ${isOpen ? 'hidden' : 'block'}`}
       >
         <MessageCircle size={28} />
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-[90vw] md:w-[400px] h-[500px] bg-deepPurple/95 backdrop-blur-xl border border-neonViolet/30 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
+        <div className="fixed bottom-6 right-6 w-[90vw] md:w-[400px] h-[500px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
           
-          {/* Header */}
-          <div className="p-4 bg-neonViolet/20 border-b border-neonViolet/20 flex justify-between items-center">
+          <div className="p-4 bg-neonViolet text-white flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="font-display font-semibold text-white">Kisan Sahayak</span>
+              <div className="w-2 h-2 rounded-full bg-green-200 animate-pulse"></div>
+              <span className="font-display font-semibold">Kisan Sahayak</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white">
+            <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
               <X size={20} />
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {messages.length === 0 && (
-              <div className="text-center text-white/50 mt-10">
+              <div className="text-center text-gray-400 mt-10">
                 <p>Namaste! 🙏</p>
                 <p className="text-sm">Ask me about market prices, weather, or your sales.</p>
               </div>
             )}
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                <div className={`max-w-[80%] p-3 rounded-xl text-sm shadow-sm ${
                   msg.role === 'user' 
-                    ? 'bg-electricBlue/20 border border-electricBlue/30 text-white rounded-br-none' 
-                    : 'bg-white/10 border border-white/10 text-white/90 rounded-bl-none'
+                    ? 'bg-electricBlue text-white rounded-br-none' 
+                    : 'bg-white text-black border border-gray-200 rounded-bl-none'
                 }`}>
                   {msg.text}
                 </div>
@@ -123,11 +135,11 @@ const Chatbot: React.FC = () => {
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white/10 p-3 rounded-xl rounded-bl-none">
+                <div className="bg-white border border-gray-200 p-3 rounded-xl rounded-bl-none">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></span>
-                    <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce delay-100"></span>
-                    <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce delay-200"></span>
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></span>
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></span>
                   </div>
                 </div>
               </div>
@@ -135,11 +147,10 @@ const Chatbot: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="p-3 border-t border-white/10 bg-black/20 flex gap-2">
+          <div className="p-3 border-t border-gray-200 bg-white flex gap-2">
             <button 
               onClick={startListening}
-              className={`p-3 rounded-full ${isListening ? 'bg-red-500 animate-pulse' : 'bg-white/10 hover:bg-white/20'} transition-colors`}
+              className={`p-3 rounded-full ${isListening ? 'bg-red-100 text-maroon animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors`}
             >
               {isListening ? <MicOff size={20} /> : <Mic size={20} />}
             </button>
@@ -149,11 +160,11 @@ const Chatbot: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Ask anything..."
-              className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/30"
+              className="flex-1 bg-transparent border-none outline-none text-black placeholder-gray-400"
             />
             <button 
               onClick={handleSend}
-              className="p-3 rounded-full bg-neonViolet/80 hover:bg-neonViolet text-white transition-colors"
+              className="p-3 rounded-full bg-neonViolet text-white hover:bg-green-700 transition-colors"
             >
               <Send size={20} />
             </button>

@@ -1,4 +1,6 @@
-export type Language = 'en' | 'hi' | 'mr' | 'bn' | 'ta' | 'te' | 'gu' | 'kn' | 'ml';
+export type Language = 'en' | 'hi' | 'mr' | 'bn' | 'ta' | 'te' | 'gu' | 'kn' | 'ml' | 'pa' | 'or';
+
+export type Theme = 'light' | 'dark';
 
 export interface ProduceItem {
   id: string;
@@ -21,18 +23,23 @@ export interface SaleRecord {
 }
 
 export interface UserProfile {
+  uid: string;
   name: string;
-  phone: string;
+  email?: string;
+  phone?: string;
+  photoURL: string;
   language: Language;
+  themePreference: Theme;
   location: string;
-  avatar: string;
   points: number;
   badges: string[];
+  upiId?: string;
+  createdAt: string;
 }
 
 export interface AppSettings {
   language: Language;
-  theme: 'dark' | 'light';
+  theme: Theme;
   reduceMotion: boolean;
   notifications: boolean;
 }

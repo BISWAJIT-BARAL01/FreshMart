@@ -1,16 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Securely access API Key
+const apiKey = process.env.API_KEY || ''; 
+const ai = new GoogleGenAI({ apiKey });
 
 export const getGeminiResponse = async (
   prompt: string, 
   context: string = '',
   language: string = 'en'
 ): Promise<string> => {
+  if (!apiKey) return "API Key missing.";
+
   try {
     const model = 'gemini-2.5-flash';
     const systemInstruction = `You are a helpful AI assistant for 'FreshMart', an app for Indian farmers. 
-    The user speaks ${language}. 
+    The user speaks language code: ${language}. 
     Keep answers EXTREMELY short (max 2 sentences), simple, and encouraging. 
     Avoid technical jargon.
     Context: ${context}.
@@ -27,7 +31,7 @@ export const getGeminiResponse = async (
       }
     });
 
-    return response.text || "Sorry, try again.";
+    return response.text || "Sorry, I didn't catch that.";
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "Network issue. Please check internet.";
@@ -35,9 +39,11 @@ export const getGeminiResponse = async (
 };
 
 export const parseVoiceSaleIntent = async (transcript: string): Promise<any> => {
+   if (!apiKey) return null;
+   
    try {
     const model = 'gemini-2.5-flash';
-    const systemInstruction = `Extract sales data from the farmer's voice input which may be in Hindi, English, or mixed (Hinglish).
+    const systemInstruction = `Extract sales data from the farmer's voice input. Input language may be mixed.
     Return strictly JSON. 
     Format: { "item": string, "quantity": number, "unit": string, "price": number, "confidence": "high" | "low" }.
     Translate item names to English standardized names (e.g., 'Kanda' -> 'Onion').
