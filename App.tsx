@@ -16,6 +16,8 @@ const Settings = React.lazy(() => import('./components/Profile'));
 const Profile = React.lazy(() => import('./components/Profile'));
 const PricePredictor = React.lazy(() => import('./components/PricePredictor'));
 
+export const API_BASE_URL = 'https://freshmartbackend-ct1m.onrender.com';
+
 type View = 'dashboard' | 'speak' | 'inventory' | 'profile' | 'predictor';
 
 // Inner App handles the logged-in state UI
