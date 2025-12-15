@@ -7,15 +7,14 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-// Static Imports to prevent "Failed to fetch dynamically imported module" errors
-import Dashboard from './components/Dashboard';
-import SpeakToSell from './components/SpeakToSell';
-import Inventory from './components/Inventory';
-import Settings from './components/Settings'; 
-import Profile from './components/Profile';
-import PricePredictor from './components/PricePredictor';
-import ThreeHero from './components/ThreeHero';
-import Chatbot from './components/Chatbot';
+// Lazy Load Components for Performance
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const SpeakToSell = React.lazy(() => import('./components/SpeakToSell'));
+const Inventory = React.lazy(() => import('./components/Inventory'));
+const Profile = React.lazy(() => import('./components/Profile'));
+const PricePredictor = React.lazy(() => import('./components/PricePredictor'));
+const ThreeHero = React.lazy(() => import('./components/ThreeHero'));
+const Chatbot = React.lazy(() => import('./components/Chatbot'));
 
 type View = 'dashboard' | 'speak' | 'inventory' | 'profile' | 'predictor';
 
@@ -44,7 +43,7 @@ const AuthenticatedApp: React.FC = () => {
   // If not user, show Login
   if (!user) return <Login />;
 
-  // Updated Logo URL to local file
+  // FIXED: Explicitly use logoFM.jpeg
   const LOGO_URL = "/logoFM.jpeg";
 
   const NavItem = ({ view, icon: Icon, label }: { view: View; icon: React.ComponentType<any>; label: string }) => (
@@ -117,10 +116,12 @@ const AuthenticatedApp: React.FC = () => {
 
           {/* Main Content */}
           <main className="flex-1 w-full min-h-screen relative overflow-hidden bg-white">
-             {/* Background Elements */}
+             {/* Background Elements - Lazy Loaded */}
              {!reduceMotion && (
                <ErrorBoundary>
+                 <Suspense fallback={null}>
                    <ThreeHero />
+                 </Suspense>
                </ErrorBoundary>
              )}
 
@@ -144,22 +145,27 @@ const AuthenticatedApp: React.FC = () => {
                     </div>
                 </header>
 
-                {/* View Renderer */}
+                {/* View Renderer with Suspense */}
                 <div className="mt-6 flex-1">
                   <ErrorBoundary>
-                    {currentView === 'dashboard' && <Dashboard />}
-                    {currentView === 'speak' && <SpeakToSell lang={language} />}
-                    {currentView === 'inventory' && <Inventory />}
-                    {currentView === 'profile' && <Profile />}
-                    {currentView === 'predictor' && <PricePredictor lang={language} />}
+                    <Suspense fallback={<PageLoader />}>
+                        {currentView === 'dashboard' && <Dashboard />}
+                        {currentView === 'speak' && <SpeakToSell lang={language} />}
+                        {currentView === 'inventory' && <Inventory />}
+                        {currentView === 'profile' && <Profile />}
+                        {currentView === 'predictor' && <PricePredictor lang={language} />}
+                    </Suspense>
                   </ErrorBoundary>
                 </div>
              </div>
           </main>
         </div>
         
+        {/* Chatbot Lazy Loaded */}
         <ErrorBoundary>
-          <Chatbot />
+            <Suspense fallback={null}>
+                <Chatbot />
+            </Suspense>
         </ErrorBoundary>
       </div>
     </ErrorBoundary>

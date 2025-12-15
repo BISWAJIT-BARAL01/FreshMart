@@ -42,17 +42,24 @@ export const getGeminiResponse = async (
   }
 };
 
-export const parseVoiceSaleIntent = async (transcript: string): Promise<any> => {
+export const parseVoiceSaleIntent = async (transcript: string, language: string = 'en'): Promise<any> => {
    if (!apiKey) return null;
    
    try {
     const model = 'gemini-2.5-flash';
+    
+    // Improved System Instruction for Regional Context
     const systemInstruction = `You are an intelligent parser for an Indian farmer's produce app.
-    The user will speak a sentence describing a sale. 
-    The input might be in English, Hindi, or "Hinglish" (e.g., "Mera 50 kilo kanda bik gaya 20 rupay mein").
+    The user is speaking in language code: '${language}'.
+    The transcript is: "${transcript}".
+    
+    The user might use mixed languages (Hinglish/Tanglish etc).
+    Examples:
+    - "Mera 50 kilo kanda bik gaya 20 rupay mein" -> Onion, 50kg, 20/kg or Total 20? Infer logically.
+    - "Sold 20 dozen banana" -> Banana, 20 dozen.
     
     Your Task:
-    1. Correct any phonetic transcription errors (e.g., "Kanda" -> Onion, "Batata" -> Potato).
+    1. Correct any phonetic transcription errors (e.g., "Kanda" -> Onion, "Batata" -> Potato, "Tamatar" -> Tomato).
     2. Extract the following fields strictly as JSON:
        - "item": string (English name of the produce)
        - "quantity": number

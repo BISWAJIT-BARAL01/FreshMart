@@ -42,9 +42,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => {
     setLoading(true);
     
-    // Check if Google script is loaded
-    if (!window.google || !window.google.accounts) {
-        alert("Google Sign-In script not loaded. Please check internet connection.");
+    // Fix: Wait for Google Script if not ready
+    const waitForGoogle = () => {
+        return new Promise<boolean>((resolve) => {
+            if (window.google && window.google.accounts) return resolve(true);
+            let attempts = 0;
+            const interval = setInterval(() => {
+                attempts++;
+                if (window.google && window.google.accounts) {
+                    clearInterval(interval);
+                    resolve(true);
+                }
+                if (attempts > 20) { // Wait max 2 seconds
+                    clearInterval(interval);
+                    resolve(false);
+                }
+            }, 100);
+        });
+    }
+
+    const isScriptReady = await waitForGoogle();
+    
+    if (!isScriptReady) {
+        alert("Google Sign-In script failed to load. Please check your internet connection.");
         setLoading(false);
         return;
     }
@@ -115,10 +135,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // (like 'origin mismatch' or 'invalid_client') and closed it. 
                 // We fallback to demo login to let them proceed.
                 if (GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID')) {
-                    console.warn("Placeholder Client ID detected. Falling back to Demo Login.");
                     // Short delay to allow popup to fully close visually
                     setTimeout(() => {
-                        alert("Demo Mode: Logging in as Google User (Simulator).");
+                        // FORCE AUTO FIX: Automatically use demo login if config is missing
+                        alert("Dev Mode: Google Client ID not configured. Using Demo Account.");
                         login('email', { email: 'demo-google@freshmart.com' });
                     }, 500);
                 } else if (err.type === 'popup_closed') {
@@ -136,8 +156,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
         console.error("Google Login Exception:", e);
         // Fallback for Demo purposes if Client ID is invalid
-        alert("Google Integration Error: Invalid Client ID. Logging in as Demo User.");
-        await login('email', { email: 'demo-google@freshmart.com' });
+        setLoading(false);
+        setTimeout(() => {
+             alert("Google Integration Error: Invalid Client ID. Logging in as Demo User.");
+             login('email', { email: 'demo-google@freshmart.com' });
+        }, 500);
     }
   };
 

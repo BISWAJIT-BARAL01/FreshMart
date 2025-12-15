@@ -1,5 +1,6 @@
 import React from 'react';
 import NeonCard from './ui/NeonCard';
+import SafeImage from './ui/SafeImage';
 import { MOCK_PRODUCE, toLocalDigits } from '../constants';
 import { Plus } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -20,11 +21,10 @@ const Inventory: React.FC = () => {
         {MOCK_PRODUCE.map((item) => (
           <NeonCard key={item.id} accentColor="green" className="group relative overflow-hidden border border-gray-200 hover:border-green-300">
             <div className="aspect-square mb-4 overflow-hidden rounded-lg bg-gray-100">
-              <img 
+              <SafeImage 
                 src={item.image} 
                 alt={item.name_en} 
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
-                loading="lazy"
               />
             </div>
             

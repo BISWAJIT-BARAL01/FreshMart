@@ -45,25 +45,26 @@ export const useSpeechRecognition = ({
     };
   }, []);
 
-  // Update Language dynamically
+  // Force Auto Fix: Sync Language Dialect
   useEffect(() => {
     if (recognitionRef.current) {
-        // Map app languages to specific speech locales
-        // 'en-IN' is excellent for Hinglish (Hindi mixed with English)
+        // Precise Regional Mapping for Indian Context
         const langMap: Record<string, string> = {
-            'en': 'en-IN',
-            'hi': 'hi-IN',
-            'mr': 'mr-IN',
-            'bn': 'bn-IN',
-            'gu': 'gu-IN', 
-            'ta': 'ta-IN',
-            'te': 'te-IN',
-            'kn': 'kn-IN',
-            'ml': 'ml-IN',
-            'pa': 'pa-IN',
-            'or': 'or-IN'
+            'en': 'en-IN', // Indian English
+            'hi': 'hi-IN', // Hindi
+            'mr': 'mr-IN', // Marathi
+            'bn': 'bn-IN', // Bengali
+            'gu': 'gu-IN', // Gujarati
+            'ta': 'ta-IN', // Tamil
+            'te': 'te-IN', // Telugu
+            'kn': 'kn-IN', // Kannada
+            'ml': 'ml-IN', // Malayalam
+            'pa': 'pa-IN', // Punjabi
+            'or': 'or-IN'  // Odia
         };
-        recognitionRef.current.lang = langMap[language] || 'en-IN';
+        const targetLang = langMap[language] || 'en-IN';
+        console.log(`Setting Speech Recognition Language to: ${targetLang}`);
+        recognitionRef.current.lang = targetLang;
     }
   }, [language]);
 
@@ -71,13 +72,13 @@ export const useSpeechRecognition = ({
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     
     silenceTimerRef.current = setTimeout(() => {
-      if (recognitionRef.current) {
+      if (recognitionRef.current && isListening) {
+        console.log("Silence detected. Stopping recognition.");
         recognitionRef.current.stop();
-        setIsListening(false);
-        if (onEnd) onEnd();
+        // State update handled in onend
       }
     }, silenceDuration);
-  }, [onEnd, silenceDuration]);
+  }, [isListening, silenceDuration]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
@@ -90,8 +91,7 @@ export const useSpeechRecognition = ({
     try {
       recognitionRef.current.start();
     } catch (e) {
-      // If already started, just reset
-      console.warn("Recognition already started");
+      console.warn("Recognition already started, continuing...");
     }
 
     recognitionRef.current.onstart = () => {
@@ -115,9 +115,9 @@ export const useSpeechRecognition = ({
 
       if (finalTx) {
         setTranscript(prev => {
-            const newTx = prev + ' ' + finalTx;
-            if (onResult) onResult(newTx.trim());
-            return newTx.trim();
+            const newTx = (prev + ' ' + finalTx).trim();
+            if (onResult) onResult(newTx);
+            return newTx;
         });
       }
       setInterimTranscript(interimTx);
@@ -125,19 +125,25 @@ export const useSpeechRecognition = ({
 
     recognitionRef.current.onerror = (event: any) => {
       if (event.error === 'no-speech') {
-        // Ignore simple no-speech errors, just wait
-        return; 
+        return; // Ignore
       }
       console.error("Speech Error:", event.error);
+      
+      let msg = "Microphone error. Please retry.";
+      if (event.error === 'network') msg = "Network Error: Check internet connection.";
+      if (event.error === 'not-allowed') msg = "Microphone blocked. Check permissions.";
+      if (event.error === 'language-not-supported') msg = "Language not supported by browser.";
+
+      setError(msg);
+      // We don't stop strictly on error unless it's fatal, 
+      // but usually the browser stops itself.
       setIsListening(false);
-      setError("Microphone error. Please retry.");
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
 
     recognitionRef.current.onend = () => {
-       // Only update state if we didn't manually stop it logic inside silence timer handles logic
        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
        setIsListening(false);
+       if (onEnd) onEnd();
     };
 
   }, [onResult, onEnd, resetSilenceTimer]);

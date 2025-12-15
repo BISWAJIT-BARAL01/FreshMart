@@ -1,7 +1,40 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sphere, Cylinder, MeshDistortMaterial, Float, Stars } from '@react-three/drei';
+import { Sphere, Float, MeshDistortMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Fix for TypeScript not recognizing Intrinsic elements globally.
+// We explicitly define the R3F elements used in this file to satisfy the compiler.
+// We declare both global JSX and React.JSX to cover different React type versions.
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      ambientLight: any;
+      pointLight: any;
+      mesh: any;
+      cylinderGeometry: any;
+      meshStandardMaterial: any;
+    }
+  }
+}
+
+// For React 18+ types where JSX is under React namespace
+declare module 'react' {
+  namespace JSX {
+    interface IntrinsicElements {
+      ambientLight: any;
+      pointLight: any;
+      mesh: any;
+      cylinderGeometry: any;
+      meshStandardMaterial: any;
+    }
+  }
+}
+
+// Fallback component if R3F fails or loading
+const SimpleBackground = () => (
+    <div className="absolute inset-0 bg-gradient-to-br from-white via-green-50 to-white -z-20 opacity-50" />
+);
 
 const GlowingOrb = ({ position, color, distort = 0.4 }: { position: [number, number, number], color: string, distort?: number }) => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -39,10 +72,10 @@ const GeometricVeg = ({ position, color }: { position: [number, number, number],
       });
      return (
         <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.8}>
-             <Cylinder ref={meshRef} args={[0.3, 0.3, 2, 16]} position={position} rotation={[0,0,Math.PI/4]}>
-                {/* @ts-ignore */}
+             <mesh ref={meshRef} position={position} rotation={[0,0,Math.PI/4]}>
+                <cylinderGeometry args={[0.3, 0.3, 2, 16]} />
                 <meshStandardMaterial color={color} roughness={0.3} metalness={0.5} emissive={color} emissiveIntensity={0.2} />
-             </Cylinder>
+             </mesh>
         </Float>
      );
 }
@@ -50,29 +83,33 @@ const GeometricVeg = ({ position, color }: { position: [number, number, number],
 const SceneContent = () => {
   return (
     <>
-      {/* @ts-ignore */}
       <ambientLight intensity={0.8} />
-      {/* @ts-ignore */}
       <pointLight position={[10, 10, 10]} intensity={1.5} color="#2E7D32" />
-      {/* @ts-ignore */}
       <pointLight position={[-10, -10, -10]} intensity={1} color="#800000" />
       
-      {/* Abstract Representation of Produce */}
-      <GlowingOrb position={[-2, 0, 0] as [number, number, number]} color="#2E7D32" /> {/* Green */}
-      <GlowingOrb position={[2, 1, -1] as [number, number, number]} color="#800000" distort={0.2} /> {/* Maroon */}
-      <GeometricVeg position={[0, -1, 1] as [number, number, number]} color="#4CAF50" /> {/* Light Green */}
+      <GlowingOrb position={[-2, 0, 0]} color="#2E7D32" />
+      <GlowingOrb position={[2, 1, -1]} color="#800000" distort={0.2} />
+      <GeometricVeg position={[0, -1, 1]} color="#4CAF50" />
     </>
   );
 };
 
 const ThreeHero: React.FC = () => {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <SimpleBackground />;
+
   return (
     <div className="w-full h-[300px] md:h-[400px] absolute top-0 left-0 -z-10 opacity-30 pointer-events-none">
-      <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
-        <React.Suspense fallback={null}>
-          <SceneContent />
-        </React.Suspense>
-      </Canvas>
+       <React.Suspense fallback={<SimpleBackground />}>
+          <Canvas camera={{ position: [0, 0, 6], fov: 45 }} dpr={[1, 2]}>
+            <SceneContent />
+          </Canvas>
+       </React.Suspense>
     </div>
   );
 };

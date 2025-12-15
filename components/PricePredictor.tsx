@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import NeonCard from './ui/NeonCard';
+import SafeImage from './ui/SafeImage';
 import { MOCK_PRODUCE, TRANSLATIONS, toLocalDigits } from '../constants';
-import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, ArrowUpRight } from 'lucide-react';
 import { Language } from '../types';
 
 interface PricePredictorProps {
@@ -39,7 +40,7 @@ const PricePredictor: React.FC<PricePredictorProps> = ({ lang }) => {
                             className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedItem === item.id ? 'bg-green-50 border-neonViolet' : 'bg-white border-gray-200 hover:border-green-300'}`}
                         >
                             <div className="flex items-center gap-4">
-                                <img src={item.image} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
+                                <SafeImage src={item.image} className="w-12 h-12 rounded-lg object-cover" alt={item.name_en} />
                                 <div>
                                     <h4 className="text-black font-bold">
                                          {lang !== 'en' && item.name_local[lang] ? item.name_local[lang] : item.name_en}
@@ -73,7 +74,7 @@ const PredictionCard = ({ item, t, logic, lang }: any) => {
 
     return (
         <NeonCard accentColor="blue" className="h-full flex flex-col justify-center text-center p-8 bg-white border border-gray-200">
-            <img src={item.image} className="w-24 h-24 rounded-full mx-auto mb-6 object-cover border-4 border-green-50 shadow-md" />
+            <SafeImage src={item.image} className="w-24 h-24 rounded-full mx-auto mb-6 object-cover border-4 border-green-50 shadow-md" alt={itemName} />
             <h3 className="text-3xl text-black font-display mb-2">{itemName}</h3>
             
             <div className="my-6">

@@ -98,14 +98,15 @@
   "imports": {
     "react-dom/": "https://esm.sh/react-dom@18.3.1/",
     "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
     "react/": "https://esm.sh/react@18.3.1/",
     "react": "https://esm.sh/react@18.3.1",
     "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.16.8",
-    "@react-three/drei": "https://esm.sh/@react-three/drei@9.108.4",
+    "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.16.8?external=react,react-dom",
+    "@react-three/drei": "https://esm.sh/@react-three/drei@9.108.4?external=react,react-dom,@react-three/fiber",
     "three": "https://esm.sh/three@0.165.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.395.0",
-    "recharts": "https://esm.sh/recharts@2.12.7",
+    "lucide-react": "https://esm.sh/lucide-react@0.395.0?external=react",
+    "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
     "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
     "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
     "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
@@ -116,5 +117,6 @@
   </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

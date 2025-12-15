@@ -42,8 +42,8 @@ const SpeakToSell: React.FC<SpeakToSellProps> = ({ lang }) => {
     setIsProcessing(true);
     setParseError(null);
     
-    // Simulate "Thinking" delay for UX
-    const data = await parseVoiceSaleIntent(text);
+    // Pass current language to AI for better regional parsing
+    const data = await parseVoiceSaleIntent(text, lang);
     
     if (data && (data.item || data.price)) {
         setParsedData(data);

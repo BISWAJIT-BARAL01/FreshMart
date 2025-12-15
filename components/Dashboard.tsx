@@ -2,6 +2,7 @@ import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, AlertCircle, DollarSign, Package, ArrowUpRight, ArrowUp } from 'lucide-react';
 import NeonCard from './ui/NeonCard';
+import SafeImage from './ui/SafeImage';
 import { MOCK_SALES, MOCK_PRODUCE, getTranslation, toLocalDigits } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,7 +17,11 @@ const Dashboard: React.FC = () => {
       
       {/* Welcome Banner */}
       <div className="flex items-center gap-4 mb-4">
-         <img src={userProfile?.photoURL || 'https://via.placeholder.com/100'} className="w-16 h-16 rounded-full border-2 border-green-200 object-cover" />
+         <SafeImage 
+           src={userProfile?.photoURL || 'https://via.placeholder.com/100'} 
+           className="w-16 h-16 rounded-full border-2 border-green-200 object-cover" 
+           alt="Profile"
+         />
          <div>
             <h2 className="text-2xl font-display font-bold text-black">{t('welcome')} {userProfile?.name}</h2>
             <p className="text-gray-600 text-sm">Here is what's happening in your mandi today.</p>
@@ -122,7 +127,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
             {MOCK_PRODUCE.map((item) => (
                 <div key={item.id} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-transparent hover:border-green-100">
-                    <img src={item.image} alt={item.name_en} className="w-12 h-12 rounded-lg object-cover mr-4" />
+                    <SafeImage src={item.image} alt={item.name_en} className="w-12 h-12 rounded-lg object-cover mr-4" />
                     <div className="flex-1">
                         <h4 className="text-black font-medium">
                           {language !== 'en' && item.name_local[language] ? item.name_local[language] : item.name_en}

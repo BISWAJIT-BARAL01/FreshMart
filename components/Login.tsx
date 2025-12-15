@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getTranslation } from '../constants';
-import { Phone, Mail, ArrowRight, Loader, User, Facebook, Apple, Lock, AlertCircle } from 'lucide-react';
+import { getTranslation, SUPPORTED_LANGUAGES } from '../constants';
+import { Phone, Mail, ArrowRight, Loader, User, Facebook, Apple, Lock, AlertCircle, Globe } from 'lucide-react';
 import NeonCard from './ui/NeonCard';
 import { useAuth } from '../contexts/AuthContext';
 import SafeImage from './ui/SafeImage';
 
 const Login: React.FC = () => {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { login, loginWithGoogle } = useAuth();
   
   // UI State
@@ -24,7 +24,7 @@ const Login: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
 
-  // Local Logo URL
+  // STRICT LOGO PATH
   const LOGO_URL = "/logoFM.jpeg";
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
@@ -87,6 +87,22 @@ const Login: React.FC = () => {
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-neonViolet/10 rounded-full blur-[80px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-electricBlue/10 rounded-full blur-[80px]"></div>
 
+      {/* Language Selector (Top Right) */}
+      <div className="absolute top-4 right-4 z-20">
+         <div className="bg-white border border-gray-200 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm">
+            <Globe size={14} className="text-neonViolet"/>
+            <select 
+                value={language} 
+                onChange={(e) => setLanguage(e.target.value as any)}
+                className="bg-transparent text-sm font-medium outline-none text-gray-700 cursor-pointer"
+            >
+                {SUPPORTED_LANGUAGES.map(lang => (
+                    <option key={lang.code} value={lang.code}>{lang.nativeName} ({lang.label})</option>
+                ))}
+            </select>
+         </div>
+      </div>
+
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         
         {/* Brand Header */}
@@ -101,7 +117,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Card */}
-        <NeonCard className="bg-white border-gray-200 shadow-xl">
+        <NeonCard className="bg-white border-gray-200 shadow-xl relative">
            
            {/* Method Switcher */}
            <div className="flex gap-2 mb-8 p-1.5 bg-gray-100 rounded-xl border border-gray-200">
